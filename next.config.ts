@@ -7,7 +7,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  cacheComponents: true,
 };
 
 export default withPWA(nextConfig);
