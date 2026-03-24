@@ -24,7 +24,7 @@ export default function NuevoHabito() {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (user) {
-      await supabase.from('habitos').insert({
+      await (supabase.from('habitos') as any).insert({
         usuario_id: user.id,
         nombre: nombre.trim(),
         icono: icono,
