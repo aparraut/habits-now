@@ -22,17 +22,6 @@ export default async function Home() {
       <Suspense fallback={<p className="text-gray-400 text-center mt-10">Cargando hábitos...</p>}>
         <HabitsList />
       </Suspense>
-
-      <div className="fixed inset-0 pointer-events-none z-40 flex justify-center">
-        <div className="w-full max-w-md relative h-full">
-          <Link 
-            href="/habitos/nuevo" 
-            className="absolute bottom-24 right-6 w-14 h-14 bg-[#39ff14] text-[#0f172a] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:-translate-y-1 transition-transform pointer-events-auto"
-          >
-            <Plus className="w-8 h-8" />
-          </Link>
-        </div>
-      </div>
     </main>
   );
 }
@@ -73,21 +62,34 @@ async function HabitsList() {
   }
   
   return (
-    <section className="space-y-4">
-      {habits.map(habit => {
-        const todayLog = logs?.find(log => log.habito_id === habit.id);
-        return (
-          <HabitCard 
-            key={habit.id} 
-            id={habit.id} 
-            userId={user.id}
-            name={habit.nombre} 
-            icon={habit.icono} 
-            initialScore={todayLog?.puntuacion || null}
-            logId={todayLog?.id || null}
-          />
-        );
-      })}
-    </section>
+    <>
+      <section className="space-y-4">
+        {habits.map(habit => {
+          const todayLog = logs?.find(log => log.habito_id === habit.id);
+          return (
+            <HabitCard 
+              key={habit.id} 
+              id={habit.id} 
+              userId={user.id}
+              name={habit.nombre} 
+              icon={habit.icono} 
+              initialScore={todayLog?.puntuacion || null}
+              logId={todayLog?.id || null}
+            />
+          );
+        })}
+      </section>
+
+      <div className="fixed inset-0 pointer-events-none z-40 flex justify-center">
+        <div className="w-full max-w-md relative h-full">
+          <Link 
+            href="/habitos/nuevo" 
+            className="absolute bottom-24 right-6 w-14 h-14 bg-[#39ff14] text-[#0f172a] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:-translate-y-1 transition-transform pointer-events-auto"
+          >
+            <Plus className="w-8 h-8" />
+          </Link>
+        </div>
+      </div>
+    </>
   );
 }
