@@ -19,7 +19,7 @@ export default function EditarHabito({ params }: { params: Promise<{ id: string 
 
   useEffect(() => {
     async function loadHabit() {
-      const { data } = await supabase.from('habitos').select('*').eq('id', resolvedParams.id).single();
+      const { data } = await (supabase.from('habitos') as any).select('*').eq('id', resolvedParams.id).single();
       if (data) {
         setNombre(data.nombre);
         if (data.icono) setIcono(data.icono);
