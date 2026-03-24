@@ -32,6 +32,8 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+export const unstable_instant = false;
+
 import { Suspense } from "react";
 import { headers } from "next/headers";
 import { getDictionary, Locale } from "@/lib/dictionaries";
