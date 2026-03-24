@@ -2,13 +2,13 @@
 import Link from 'next/link';
 import { CheckSquare, TrendingUp, Settings } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useI18n } from '@/components/providers/I18nProvider';
 
 export default function BottomBar() {
   const pathname = usePathname();
+  const { locale } = useI18n();
 
-  // Simplistic client-side dictionary approach for the bottom bar since useTranslations isn't setup
-  // In a real scenario, we'd load this from a context.
-  const isEn = typeof window !== 'undefined' && window.navigator.language.startsWith('en');
+  const isEn = locale === 'en';
   
   const labels = {
     today: isEn ? 'Today' : 'Hoy',
