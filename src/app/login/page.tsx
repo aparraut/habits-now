@@ -2,13 +2,17 @@
 
 import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Mail, Loader2 } from 'lucide-react';
+import { Loader2, LogIn, UserPlus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState({ text: '', type: '' });
   const supabase = createClient();
+  const router = useRouter();
 
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
@@ -19,22 +23,36 @@ export default function LoginPage() {
     });
   };
 
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage('');
+    setMessage({ text: '', type: '' });
 
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    if (isSignUp) {
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    if (error) {
-      setMessage(error.message);
+      if (error) {
+        setMessage({ text: error.message, type: 'error' });
+      } else {
+        setMessage({ text: '¡Revisa tu correo para confirmar tu cuenta!', type: 'success' });
+      }
     } else {
-      setMessage('¡Revisa tu correo para el enlace de acceso!');
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        setMessage({ text: 'Credenciales inválidas o correo no confirmado', type: 'error' });
+      } else {
+        router.push('/');
+      }
     }
     setLoading(false);
   };
@@ -44,12 +62,15 @@ export default function LoginPage() {
       <div className="w-full max-w-sm p-8 bg-[#1e293b] rounded-2xl shadow-xl space-y-8">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-[#ededed]">Habits Now</h1>
-          <p className="mt-2 text-sm text-gray-400">Accede para seguir tu progreso</p>
+          <p className="mt-2 text-sm text-gray-400">
+            {isSignUp ? 'Crea una cuenta nueva' : 'Accede para seguir tu progreso'}
+          </p>
         </div>
 
         <div className="space-y-4">
           <button
             onClick={handleGoogleLogin}
+            type="button"
             className="w-full flex items-center justify-center gap-3 px-4 py-3 text-sm font-semibold text-[#0a192f] bg-[#00eeff] rounded-lg hover:bg-opacity-90 transition-all shadow-[0_0_15px_rgba(0,238,255,0.4)]"
           >
             Continuar con Google
@@ -61,7 +82,7 @@ export default function LoginPage() {
             <div className="flex-grow border-t border-gray-600"></div>
           </div>
 
-          <form onSubmit={handleEmailLogin} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-4">
             <div>
               <input
                 type="email"
@@ -72,19 +93,52 @@ export default function LoginPage() {
                 className="w-full px-4 py-3 bg-[#0f172a] border border-gray-600 rounded-lg focus:outline-none focus:border-[#39ff14] text-[#ededed] placeholder-gray-500"
               />
             </div>
+            <div>
+              <input
+                type="password"
+                required
+                minLength={6}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Contraseña (mínimo 6 char)"
+                className="w-full px-4 py-3 bg-[#0f172a] border border-gray-600 rounded-lg focus:outline-none focus:border-[#39ff14] text-[#ededed] placeholder-gray-500"
+              />
+            </div>
+            
             <button
               type="submit"
               disabled={loading}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-white bg-transparent border-2 border-[#39ff14] rounded-lg hover:bg-[#39ff14] hover:text-[#0a192f] transition-all disabled:opacity-50"
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-[#39ff14] bg-transparent border-2 border-[#39ff14] rounded-lg hover:bg-[#39ff14] hover:text-[#0a192f] transition-all disabled:opacity-50"
             >
-              {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail className="w-4 h-4" />}
-              {loading ? 'Enviando...' : 'Enviar enlace mágico'}
+              {loading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : isSignUp ? (
+                <UserPlus className="w-4 h-4" />
+              ) : (
+                <LogIn className="w-4 h-4" />
+              )}
+              {loading ? 'Procesando...' : isSignUp ? 'Crear cuenta' : 'Iniciar sesión'}
             </button>
           </form>
 
-          {message && (
-            <p className="text-xs text-center text-[#39ff14] mt-4">{message}</p>
+          {message.text && (
+            <p className={`text-sm text-center mt-4 ${message.type === 'error' ? 'text-red-400' : 'text-[#39ff14]'}`}>
+              {message.text}
+            </p>
           )}
+
+          <div className="text-center pt-2">
+            <button
+              type="button"
+              onClick={() => {
+                setIsSignUp(!isSignUp);
+                setMessage({ text: '', type: '' });
+              }}
+              className="text-xs text-gray-400 hover:text-[#39ff14] transition-colors"
+            >
+              {isSignUp ? '¿Ya tienes una cuenta? Inicia sesión' : '¿No tienes cuenta? Regístrate aquí'}
+            </button>
+          </div>
         </div>
       </div>
     </div>
