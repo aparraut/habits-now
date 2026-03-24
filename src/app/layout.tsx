@@ -32,15 +32,29 @@ export const viewport: Viewport = {
   userScalable: false,
 };
 
+import { Suspense } from "react";
 import { headers } from "next/headers";
 import { getDictionary, Locale } from "@/lib/dictionaries";
 import { I18nProvider } from "@/components/providers/I18nProvider";
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  return (
+    <Suspense fallback={
+      <html lang="es" className={`${geistSans.variable} ${geistMono.variable} dark`}>
+        <body className="antialiased pb-16 bg-[#0f172a] text-[#ededed]">
+        </body>
+      </html>
+    }>
+      <DynamicLayout>{children}</DynamicLayout>
+    </Suspense>
+  );
+}
+
+async function DynamicLayout({ children }: { children: React.ReactNode }) {
   const headersList = await headers();
   const locale = (headersList.get('x-next-locale') || 'es') as Locale;
   const dictionary = await getDictionary(locale);
