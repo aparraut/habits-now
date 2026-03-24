@@ -1,6 +1,8 @@
 import HabitCard from "@/components/habits/HabitCard";
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
+import { Plus } from 'lucide-react';
+import Link from 'next/link';
 
 export const unstable_instant = { 
   prefetch: 'static',
@@ -11,7 +13,7 @@ export const unstable_instant = {
 
 export default async function Home() {
   return (
-    <main className="p-4 max-w-md mx-auto min-h-screen">
+    <main className="p-4 max-w-md mx-auto min-h-screen relative pb-24">
       <header className="mb-6 mt-4">
         <h1 className="text-3xl font-bold tracking-tight text-[#ededed]">Hoy</h1>
         <p className="text-sm text-gray-400">¿Cómo van tus hábitos?</p>
@@ -20,6 +22,10 @@ export default async function Home() {
       <Suspense fallback={<p className="text-gray-400 text-center mt-10">Cargando hábitos...</p>}>
         <HabitsList />
       </Suspense>
+
+      <Link href="/habitos/nuevo" className="fixed bottom-24 right-6 w-14 h-14 bg-[#39ff14] text-[#0f172a] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:scale-105 transition-transform z-40">
+        <Plus className="w-8 h-8" />
+      </Link>
     </main>
   );
 }
