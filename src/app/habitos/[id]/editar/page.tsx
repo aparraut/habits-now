@@ -1,44 +1,54 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-export default function NuevoHabito() {
+export default function EditarHabito({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params);
   const [nombre, setNombre] = useState('');
   const [icono, setIcono] = useState('⭐');
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const router = useRouter();
   const supabase = createClient();
 
-  // Opciones rápidas de iconos
-  const iconos = ['⭐', '🏃', '💧', '📚', '🧘', '🥗', '💻', '🎸'];
+  const iconos = ['⭐', '🏃', '💧', '📚', '🧘', '🥗', '💻', '🎸', '🔥', '💪', '🌙', '☀️'];
+
+  useEffect(() => {
+    async function loadHabit() {
+      const { data } = await supabase.from('habitos').select('*').eq('id', resolvedParams.id).single();
+      if (data) {
+        setNombre(data.nombre);
+        if (data.icono) setIcono(data.icono);
+      }
+      setInitialLoading(false);
+    }
+    loadHabit();
+  }, [resolvedParams.id, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nombre.trim()) return;
     
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
+    await (supabase.from('habitos') as any).update({
+      nombre: nombre.trim(),
+      icono: icono
+    }).eq('id', resolvedParams.id);
     
-    if (user) {
-      await (supabase.from('habitos') as any).insert({
-        usuario_id: user.id,
-        nombre: nombre.trim(),
-        icono: icono,
-        frecuencia: { type: 'daily' }
-      });
-      
-      setNombre('');
-      setIcono('⭐');
-      
-      router.refresh(); // Forzar actualización de Server Components en Next.js 16
-      router.push('/');
-    }
-    setLoading(false);
+    // Explicitly reset to wipe client boundary cache before leaving
+    setNombre(''); 
+    
+    router.refresh();
+    router.push('/');
   };
+
+  if (initialLoading) {
+    return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#39ff14]" /></div>;
+  }
 
   return (
     <main className="p-4 max-w-md mx-auto min-h-screen">
@@ -46,12 +56,12 @@ export default function NuevoHabito() {
         <Link href="/" className="text-gray-400 hover:text-[#ededed] p-2 -ml-2 rounded-full hover:bg-[#1e293b] transition-colors">
           <ArrowLeft className="w-6 h-6" />
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight text-[#ededed]">Nuevo Hábito</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-[#ededed]">Editar Hábito</h1>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div>
-          <label className="block text-sm font-medium text-gray-400 mb-3 ml-1">Elige un ícono</label>
+          <label className="block text-sm font-medium text-gray-400 mb-3 ml-1">Cambiar ícono</label>
           <div className="flex flex-wrap gap-3">
             {iconos.map(ico => (
               <button
@@ -67,16 +77,14 @@ export default function NuevoHabito() {
         </div>
 
         <div>
-          <label htmlFor="nombre" className="block text-sm font-medium text-gray-400 mb-2 ml-1">¿Qué quieres construir?</label>
+          <label htmlFor="nombre" className="block text-sm font-medium text-gray-400 mb-2 ml-1">Nombre</label>
           <input
             id="nombre"
             type="text"
             required
-            autoFocus
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            placeholder="Ej: Caminar 10,000 pasos"
-            className="w-full px-5 py-4 bg-[#1e293b] border-2 border-transparent focus:border-[#39ff14] rounded-2xl outline-none text-[#ededed] text-lg font-medium transition-colors placeholder:text-gray-600 placeholder:font-normal shadow-inner"
+            className="w-full px-5 py-4 bg-[#1e293b] border-2 border-transparent focus:border-[#39ff14] rounded-2xl outline-none text-[#ededed] text-lg font-medium transition-colors shadow-inner"
           />
         </div>
 
@@ -86,7 +94,7 @@ export default function NuevoHabito() {
           className="w-full flex items-center justify-center gap-3 py-4 text-lg font-bold text-[#0f172a] bg-[#39ff14] rounded-2xl hover:bg-opacity-90 transition-all shadow-[0_4px_20px_rgba(57,255,20,0.4)] disabled:opacity-50 disabled:shadow-none hover:-translate-y-1 mt-10 active:scale-95"
         >
           {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : null}
-          {loading ? 'Creando...' : 'Guardar hábito'}
+          {loading ? 'Actualizando...' : 'Guardar cambios'}
         </button>
       </form>
     </main>
