@@ -2,7 +2,12 @@ import HabitCard from "@/components/habits/HabitCard";
 import { Suspense } from 'react';
 import { createClient } from '@/lib/supabase/server';
 
-export const unstable_instant = { prefetch: 'static' };
+export const unstable_instant = { 
+  prefetch: 'static',
+  samples: [
+    { headers: [ ["x-next-locale", "es"] ] }
+  ]
+};
 
 export default async function Home() {
   return (
