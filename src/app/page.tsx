@@ -23,9 +23,16 @@ export default async function Home() {
         <HabitsList />
       </Suspense>
 
-      <Link href="/habitos/nuevo" className="fixed bottom-24 right-6 w-14 h-14 bg-[#39ff14] text-[#0f172a] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:scale-105 transition-transform z-40">
-        <Plus className="w-8 h-8" />
-      </Link>
+      <div className="fixed inset-0 pointer-events-none z-40 flex justify-center">
+        <div className="w-full max-w-md relative h-full">
+          <Link 
+            href="/habitos/nuevo" 
+            className="absolute bottom-24 right-6 w-14 h-14 bg-[#39ff14] text-[#0f172a] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:-translate-y-1 transition-transform pointer-events-auto"
+          >
+            <Plus className="w-8 h-8" />
+          </Link>
+        </div>
+      </div>
     </main>
   );
 }
@@ -48,7 +55,21 @@ async function HabitsList() {
   const logs = (logsResp as any[]) || [];
 
   if (habits.length === 0) {
-    return <p className="text-gray-400 text-center mt-10">No tienes hábitos aún. Añade uno para comenzar.</p>;
+    return (
+      <div className="flex flex-col items-center justify-center mt-24 space-y-6">
+        <div className="w-20 h-20 bg-[#1e293b] rounded-full flex items-center justify-center mb-2">
+          <Plus className="w-10 h-10 text-[#39ff14] opacity-50" />
+        </div>
+        <p className="text-gray-400 text-center font-medium">No tienes hábitos aún.</p>
+        <Link 
+          href="/habitos/nuevo"
+          className="px-6 py-3 bg-[#1e293b] border-2 border-[#334155] rounded-xl text-[#39ff14] font-bold hover:border-[#39ff14] hover:bg-opacity-80 transition-all flex items-center gap-2 shadow-lg"
+        >
+          <Plus className="w-5 h-5" />
+          Crear mi primer hábito
+        </Link>
+      </div>
+    );
   }
   
   return (
