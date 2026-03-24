@@ -1,0 +1,15 @@
+{
+  "nav": {
+    "today": "Today",
+    "progress": "Progress",
+    "settings": "Settings"
+  },
+  "dashboard": {
+    "title": "Your Habits",
+    "empty": "No habits for today. Start a new one!"
+  },
+  "habit": {
+    "scoreLabel": "Score",
+    "logNote": "Add a note..."
+  }
+}
