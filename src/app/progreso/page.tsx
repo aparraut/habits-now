@@ -1,22 +1,32 @@
 import { createClient } from '@/lib/supabase/server';
 import { Suspense } from 'react';
-import { Flame, Trophy, TrendingUp, Calendar } from 'lucide-react';
+import { Flame, Trophy, TrendingUp, Calendar, BarChart3, Clock, BarChart } from 'lucide-react';
 import Link from 'next/link';
+import RangeSelector from './RangeSelector';
 
 export const metadata = {
   title: 'Progreso - Habits Now',
 };
 
-export default async function ProgresoPage() {
+interface PageProps {
+  searchParams: Promise<{ rango?: string }>;
+}
+
+export default async function ProgresoPage({ searchParams }: PageProps) {
+  const { rango } = await searchParams;
+  const currentRange = rango || 'mes';
+
   return (
     <main className="p-4 max-w-md mx-auto min-h-screen pb-24">
-      <header className="mb-8 mt-4">
+      <header className="mb-6 mt-4">
         <h1 className="text-3xl font-bold tracking-tight text-[#ededed]">Progreso</h1>
-        <p className="text-sm text-gray-400 mt-1">Tus estadísticas de los últimos 30 días</p>
+        <p className="text-sm text-gray-400 mt-1">Explora tus resultados e insights</p>
       </header>
 
+      <RangeSelector />
+
       <Suspense fallback={<StatsSkeleton />}>
-        <StatsDashboard />
+        <StatsDashboard range={currentRange} />
       </Suspense>
     </main>
   );
@@ -25,17 +35,22 @@ export default async function ProgresoPage() {
 function StatsSkeleton() {
   return (
     <div className="space-y-6 animate-pulse mt-4">
+      {/* Cards de resumen */}
       <div className="grid grid-cols-2 gap-4">
         <div className="h-28 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
         <div className="h-28 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
       </div>
-      <div className="h-64 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
-      <div className="h-24 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
+      {/* Heatmap */}
+      <div className="h-48 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
+      {/* Star Habit */}
+      <div className="h-32 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
+      {/* Pattern Chart */}
+      <div className="h-56 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
     </div>
   );
 }
 
-async function StatsDashboard() {
+async function StatsDashboard({ range }: { range: string }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -43,20 +58,29 @@ async function StatsDashboard() {
     return <p className="text-gray-400 text-center mt-20">Inicia sesión para analizar tu progreso.</p>;
   }
 
-  // Fetch last 30 days of logs
+  // Fetch logs based on range
   const today = new Date();
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(today.getDate() - 30);
-  const startDateStr = thirtyDaysAgo.toISOString().split('T')[0];
+  let daysToFetch = 30;
+  if (range === 'semana') daysToFetch = 7;
+  if (range === 'año') daysToFetch = 365;
+  if (range === 'todo') daysToFetch = 730; // Limitamos a 2 años para mantener el rendimiento por ahora
 
-  const { data: habitos } = await (supabase.from('habitos') as any).select('id, nombre, icono').eq('usuario_id', user.id);
-  const { data: logs } = await (supabase.from('registros_diarios') as any)
+  const startTime = new Date();
+  startTime.setDate(today.getDate() - daysToFetch);
+  const startDateStr = startTime.toISOString().split('T')[0];
+
+  const { data: habitos } = await supabase.from('habitos').select('id, nombre, icono').eq('usuario_id', user.id);
+  const { data: logs } = await supabase
+    .from('registros_diarios')
     .select('fecha, habito_id, puntuacion')
     .eq('usuario_id', user.id)
     .gte('fecha', startDateStr);
 
-  const habits = habitos || [];
-  const validLogs = (logs || []).filter((l: any) => l.puntuacion && l.puntuacion > 0); // Contamos positivos
+  interface HabitRow { id: string; nombre: string; icono: string | null; }
+  interface LogRow { fecha: string | null; habito_id: string; puntuacion: number | null; }
+
+  const habits = (habitos as unknown as HabitRow[]) || [];
+  const validLogs = ((logs as unknown as LogRow[]) || []).filter(l => l.puntuacion && l.puntuacion > 0);
 
   if (habits.length === 0) {
     return (
@@ -79,8 +103,9 @@ async function StatsDashboard() {
   });
 
   const last30Days = [];
-  // Today is i=0
-  for (let i = 29; i >= 0; i--) {
+  // i=0 is today
+  const iterations = Math.min(daysToFetch, 30); // Solo mostramos los últimos 30 en el mini-heatmap para no romper el grid
+  for (let i = iterations - 1; i >= 0; i--) {
       const d = new Date();
       d.setDate(today.getDate() - i);
       const dateStr = d.toISOString().split('T')[0];
@@ -91,7 +116,21 @@ async function StatsDashboard() {
       });
   }
 
-  // 2. Calculate Current Streak
+  // 2. Patrón Semanal: ¿Qué día de la semana es más fuerte?
+  const daysOfWeek = [0, 1, 2, 3, 4, 5, 6]; // 0=Domingo
+  const weekPatternMap = new Map<number, number>();
+  validLogs.forEach((log: any) => {
+    const d = new Date(log.fecha + 'T12:00:00'); // Evitar problemas de TZ
+    const day = d.getDay();
+    weekPatternMap.set(day, (weekPatternMap.get(day) || 0) + 1);
+  });
+
+  const weekNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+  const maxWeeklyCount = Math.max(...weekNames.map((_, i) => weekPatternMap.get(i) || 0), 1);
+  const bestDayIndex = weekNames.reduce((best, _, i) => 
+    (weekPatternMap.get(i) || 0) > (weekPatternMap.get(best) || 0) ? i : best, 1);
+
+  // 3. Current Streak (Calculado siempre sobre los últimos 30 días para consistencia)
   let currentStreak = 0;
   for (let i = 0; i <= 30; i++) {
       const d = new Date();
@@ -102,30 +141,38 @@ async function StatsDashboard() {
       if (count > 0) {
           currentStreak++;
       } else if (i > 0) { 
-          // If today is empty, we don't break the streak yet. But if yesterday is empty, it's broken.
           break;
       }
   }
 
-  // 3. Find Most Consistent Habit
-  const habitCounts = new Map<string, number>();
+  // 3. Find Most Consistent Habit with tie-breaker
+  const habitStats = new Map<string, { count: number, totalPoints: number }>();
   validLogs.forEach((log: any) => {
       if (log.habito_id) {
-          habitCounts.set(log.habito_id, (habitCounts.get(log.habito_id) || 0) + 1);
+          const s = habitStats.get(log.habito_id) || { count: 0, totalPoints: 0 };
+          s.count++;
+          s.totalPoints += (log.puntuacion || 0);
+          habitStats.set(log.habito_id, s);
       }
   });
 
   let topHabitId = '';
-  let maxCount = -1;
-  habitCounts.forEach((count, id) => {
-      if (count > maxCount) {
-          maxCount = count;
+  let maxWeight = -1;
+  let finalMaxCount = 0;
+  
+  habitStats.forEach((stats, id) => {
+      // Priorizamos días logrados (count), y si empatan, desempatamos por puntos totales logrados.
+      const weight = (stats.count * 100) + stats.totalPoints;
+      if (weight > maxWeight) {
+          maxWeight = weight;
           topHabitId = id;
+          finalMaxCount = stats.count;
       }
   });
 
   const topHabit = habits.find((h: any) => h.id === topHabitId);
-  const monthlyCompletionRate = validLogs.length > 0 ? Math.round((validLogs.length / (habits.length * 30)) * 100) : 0;
+  const maxCount = finalMaxCount; // Para mostrar en la UI
+  const monthlyCompletionRate = validLogs.length > 0 ? Math.round((validLogs.length / (habits.length * daysToFetch)) * 100) : 0;
 
   return (
     <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
@@ -158,15 +205,15 @@ async function StatsDashboard() {
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2 text-[#ededed]">
             <Calendar className="w-5 h-5 text-[#00eeff]" />
-            <h2 className="font-semibold">Últimos 30 Días</h2>
+            <h2 className="font-semibold">{range === 'semana' ? 'Últimos 7 días' : range === 'año' ? 'Último Año' : 'Últimos 30 días'}</h2>
           </div>
-          <span className="text-xs font-medium px-2 py-1 bg-[#0f172a] rounded-md text-gray-400 border border-[#334155]">
-            {validLogs.length} completados
+          <span className="text-[10px] font-bold px-2 py-1 bg-[#0f172a] rounded-md text-gray-400 border border-[#334155] uppercase tracking-wider">
+            {validLogs.length} logs
           </span>
         </div>
         
-        <div className="grid grid-cols-7 gap-2 sm:gap-3">
-          {last30Days.map((day) => {
+        <div className={`grid ${range === 'semana' ? 'grid-cols-7' : 'grid-cols-7'} gap-2 sm:gap-3`}>
+          {(range === 'semana' ? last30Days.slice(-7) : last30Days).map((day) => {
             // Determine density color
             let bgColor = 'bg-[#0f172a] border border-[#334155] text-gray-600'; // Vacuum state (0)
             if (day.count > 0) bgColor = 'bg-[#39ff14] bg-opacity-20 border border-[#39ff14]/30 text-[#39ff14]/70'; // Low intensity
@@ -201,27 +248,69 @@ async function StatsDashboard() {
         </div>
         
         <div className="flex items-center gap-2 text-gray-400 mb-4 relative z-10">
-          <Trophy className="w-5 h-5 text-yellow-400 shadow-yellow-400/50 drop-shadow-md" />
-          <span className="text-sm font-medium">Hábito Estrella del Mes</span>
+          <Trophy className="w-5 h-5 text-yellow-500 shadow-yellow-500/50 drop-shadow-md" />
+          <span className="text-sm font-medium uppercase tracking-wider">Hábito Estrella ({range})</span>
         </div>
-        
+
         {topHabit ? (
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-full bg-[#0f172a] flex items-center justify-center text-3xl shadow-inner border border-[#334155]">
+              <div className="w-16 h-16 rounded-2xl bg-[#0f172a] flex items-center justify-center text-3xl shadow-inner border border-[#334155]/50 group-hover:scale-110 transition-transform">
                 {topHabit.icono || '💎'}
               </div>
               <div>
-                <p className="font-extrabold text-xl text-[#ededed]">{topHabit.nombre}</p>
-                <p className="text-sm font-medium text-[#00eeff] mt-0.5">Constante: {maxCount} días logrados</p>
+                <p className="font-black text-2xl text-[#ededed] leading-tight">{topHabit.nombre}</p>
+                <p className="text-sm font-bold text-[#00eeff] mt-1 flex items-center gap-1">
+                  <Flame className="w-4 h-4" />
+                  {maxCount} días logrados
+                </p>
               </div>
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-400 italic relative z-10">
+          <p className="text-sm text-gray-400 italic relative z-10 px-2 py-4 text-center border border-dashed border-[#334155] rounded-xl">
             Aún no hay suficientes datos para encontrar a tu estrella. ¡Sigue rompiéndola!
           </p>
         )}
+      </div>
+
+      {/* Patrón Semanal (Most Effective Day) */}
+      <div className="bg-[#1e293b] p-6 rounded-2xl border border-[#334155] shadow-lg">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-2 text-gray-400">
+            <BarChart3 className="w-5 h-5 text-[#39ff14]" />
+            <h2 className="text-sm font-bold uppercase tracking-wider">Día Más Efectivo</h2>
+          </div>
+          <span className="text-[#39ff14] font-black text-lg underline decoration-2 underline-offset-4">
+            {weekNames[bestDayIndex]}
+          </span>
+        </div>
+        
+        <div className="flex items-end justify-between h-40 gap-2 sm:gap-4 px-2">
+          {weekNames.map((name, i) => {
+            const count = weekPatternMap.get(i) || 0;
+            const height = (count / maxWeeklyCount) * 100;
+            const isBest = i === bestDayIndex;
+            
+            return (
+              <div key={name} className="flex-1 flex flex-col items-center gap-3">
+                <div className="w-full relative h-[120px] flex items-end">
+                  <div 
+                    style={{ height: `${Math.max(height, 5)}%` }}
+                    className={`w-full max-w-[24px] mx-auto rounded-t-md transition-all duration-700 delay-${i * 100} ${
+                      isBest 
+                        ? 'bg-[#39ff14] shadow-[0_0_20px_rgba(57,255,20,0.3)]' 
+                        : 'bg-[#334155] opacity-40'
+                    }`}
+                  ></div>
+                </div>
+                <span className={`text-[10px] font-black tracking-tighter uppercase ${isBest ? 'text-[#39ff14]' : 'text-gray-500'}`}>
+                  {name}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
 
     </div>

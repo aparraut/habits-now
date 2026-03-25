@@ -4,46 +4,76 @@ import { createClient } from '@/lib/supabase/server';
 import { Plus } from 'lucide-react';
 import Link from 'next/link';
 
-export const unstable_instant = { 
-  prefetch: 'static',
-  samples: [
-    { headers: [ ["x-next-locale", "es"] ] }
-  ]
-};
 
-export default async function Home() {
+
+import DateScroller from "@/components/ui/DateScroller";
+
+interface PageProps {
+  searchParams: Promise<{ fecha?: string }>;
+}
+
+export default async function Home({ searchParams }: PageProps) {
+  const { fecha } = await searchParams;
+  const selectedDate = fecha || new Date().toISOString().split('T')[0];
+
   return (
     <main className="p-4 max-w-md mx-auto min-h-screen relative pb-24">
       <header className="mb-6 mt-4">
-        <h1 className="text-3xl font-bold tracking-tight text-[#ededed]">Hoy</h1>
-        <p className="text-sm text-gray-400">¿Cómo van tus hábitos?</p>
+        <h1 className="text-3xl font-bold tracking-tight text-[#ededed]">Habits Now</h1>
+        <p className="text-sm text-gray-400">Tu progreso diario</p>
       </header>
 
-      <Suspense fallback={<p className="text-gray-400 text-center mt-10">Cargando hábitos...</p>}>
-        <HabitsList />
+      <DateScroller />
+
+      <Suspense key={selectedDate} fallback={
+        <div className="flex flex-col items-center justify-center mt-20 space-y-4 animate-pulse">
+          <div className="w-12 h-12 rounded-full border-4 border-t-[#39ff14] border-gray-800 animate-spin"></div>
+          <p className="text-gray-500 text-sm font-medium italic">Viajando en el tiempo...</p>
+        </div>
+      }>
+        <HabitsList selectedDate={selectedDate} />
       </Suspense>
     </main>
   );
 }
 
-async function HabitsList() {
+async function HabitsList({ selectedDate }: { selectedDate: string }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
   const { data: habitosResp } = await supabase.from('habitos').select('*').eq('usuario_id', user.id);
-  
-  const today = new Date().toISOString().split('T')[0];
-  const { data: logsResp } = await supabase
-    .from('registros_diarios')
-    .select('*')
-    .eq('usuario_id', user.id)
-    .eq('fecha', today);
+  const { data: logsResp } = await supabase.from('registros_diarios').select('*').eq('usuario_id', user.id).eq('fecha', selectedDate);
+  const { data: ciclosResp } = await supabase.from('ciclos').select('*').eq('usuario_id', user.id);
 
-  const habits = (habitosResp as any[]) || [];
-  const logs = (logsResp as any[]) || [];
+  interface Habit { id: string; nombre: string; icono: string | null; activo: boolean | null; ciclo_id: string | null; creado_en: string | null; }
+  interface Log { id: string; habito_id: string; puntuacion: number | null; }
+  interface Ciclo { id: string; fecha_inicio: string; fecha_fin: string; }
 
-  if (habits.length === 0) {
+  const habits = (habitosResp as unknown as Habit[]) || [];
+  const logs = (logsResp as unknown as Log[]) || [];
+  const ciclos = (ciclosResp as unknown as Ciclo[]) || [];
+
+  // Filtrar hábitos:
+  // 1. Solo si fueron creados antes o el mismo día que estamos viendo
+  // 2. Solo si están activos (activo=true) O si tienen un log ese día (aunque ahora estén archivados)
+  const activeHabits = habits.filter(habit => {
+    // Si tiene log hoy, lo mostramos sí o sí (historia)
+    const hasLogToday = logs.some(l => l.habito_id === habit.id);
+    if (hasLogToday) return true;
+
+    // Si no tiene log, solo lo mostramos si está activo y en temporada.
+    // Ignoramos la fecha de creación "creado_en" porque la importación masiva 
+    // puede haber puesto una fecha reciente a hábitos antiguos.
+    if (!habit.activo) return false;
+
+    if (!habit.ciclo_id) return true; // Permanente activo
+    const ciclo = ciclos.find(c => c.id === habit.ciclo_id);
+    if (!ciclo) return true; 
+    return selectedDate >= ciclo.fecha_inicio && selectedDate <= ciclo.fecha_fin;
+  });
+
+  if (activeHabits.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center mt-24 space-y-6">
         <div className="w-20 h-20 bg-[#1e293b] rounded-full flex items-center justify-center mb-2">
@@ -64,8 +94,8 @@ async function HabitsList() {
   return (
     <>
       <section className="space-y-4">
-        {habits.map(habit => {
-          const todayLog = logs?.find(log => log.habito_id === habit.id);
+        {activeHabits.map(habit => {
+          const todayLog = logs.find(log => log.habito_id === habit.id);
           return (
             <HabitCard 
               key={habit.id} 
@@ -75,6 +105,7 @@ async function HabitsList() {
               icon={habit.icono} 
               initialScore={todayLog?.puntuacion || null}
               logId={todayLog?.id || null}
+              selectedDate={selectedDate}
             />
           );
         })}

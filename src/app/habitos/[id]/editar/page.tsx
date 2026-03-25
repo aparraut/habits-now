@@ -10,6 +10,8 @@ export default function EditarHabito({ params }: { params: Promise<{ id: string 
   const resolvedParams = use(params);
   const [nombre, setNombre] = useState('');
   const [icono, setIcono] = useState('⭐');
+  const [cicloId, setCicloId] = useState('');
+  const [ciclosDisponibles, setCiclosDisponibles] = useState<{id:string, nombre:string}[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const router = useRouter();
@@ -18,15 +20,22 @@ export default function EditarHabito({ params }: { params: Promise<{ id: string 
   const iconos = ['⭐', '🏃', '💧', '📚', '🧘', '🥗', '💻', '🎸', '🔥', '💪', '🌙', '☀️'];
 
   useEffect(() => {
-    async function loadHabit() {
+    async function loadData() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: cData } = await (supabase.from('ciclos') as any).select('id, nombre').eq('usuario_id', user.id);
+        if (cData) setCiclosDisponibles(cData);
+      }
+
       const { data } = await (supabase.from('habitos') as any).select('*').eq('id', resolvedParams.id).single();
       if (data) {
         setNombre(data.nombre);
         if (data.icono) setIcono(data.icono);
+        if (data.ciclo_id) setCicloId(data.ciclo_id);
       }
       setInitialLoading(false);
     }
-    loadHabit();
+    loadData();
   }, [resolvedParams.id, supabase]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,7 +45,8 @@ export default function EditarHabito({ params }: { params: Promise<{ id: string 
     setLoading(true);
     await (supabase.from('habitos') as any).update({
       nombre: nombre.trim(),
-      icono: icono
+      icono: icono,
+      ciclo_id: cicloId || null
     }).eq('id', resolvedParams.id);
     
     // Explicitly reset to wipe client boundary cache before leaving
@@ -86,6 +96,21 @@ export default function EditarHabito({ params }: { params: Promise<{ id: string 
             onChange={(e) => setNombre(e.target.value)}
             className="w-full px-5 py-4 bg-[#1e293b] border-2 border-transparent focus:border-[#39ff14] rounded-2xl outline-none text-[#ededed] text-lg font-medium transition-colors shadow-inner"
           />
+        </div>
+
+        <div>
+          <label htmlFor="ciclo" className="block text-sm font-medium text-gray-400 mb-2 ml-1">¿Pertenece a un Reto o Plan?</label>
+          <select
+            id="ciclo"
+            value={cicloId}
+            onChange={(e) => setCicloId(e.target.value)}
+            className="w-full px-5 py-4 bg-[#1e293b] border-2 border-[#334155] focus:border-[#39ff14] rounded-2xl outline-none text-[#ededed] text-base font-medium transition-colors cursor-pointer appearance-none shadow-inner"
+          >
+            <option value="">Permanente (Ningún plan)</option>
+            {ciclosDisponibles.map(c => (
+              <option key={c.id} value={c.id}>{c.nombre}</option>
+            ))}
+          </select>
         </div>
 
         <button

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Loader2, ArrowLeft } from 'lucide-react';
@@ -9,9 +9,20 @@ import Link from 'next/link';
 export default function NuevoHabito() {
   const [nombre, setNombre] = useState('');
   const [icono, setIcono] = useState('⭐');
+  const [cicloId, setCicloId] = useState('');
+  const [ciclosDisponibles, setCiclosDisponibles] = useState<{id:string, nombre:string}[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+  useEffect(() => {
+    supabase.auth.getUser().then(({data:{user}}) => {
+      if (user) {
+        supabase.from('ciclos').select('id, nombre').eq('usuario_id', user.id).then(({data}) => {
+          if (data) setCiclosDisponibles(data);
+        });
+      }
+    });
+  }, []);
 
   // Opciones rápidas de iconos
   const iconos = ['⭐', '🏃', '💧', '📚', '🧘', '🥗', '💻', '🎸'];
@@ -28,7 +39,8 @@ export default function NuevoHabito() {
         usuario_id: user.id,
         nombre: nombre.trim(),
         icono: icono,
-        frecuencia: { type: 'daily' }
+        frecuencia: { type: 'daily' },
+        ciclo_id: cicloId || null
       });
       
       setNombre('');
@@ -78,6 +90,21 @@ export default function NuevoHabito() {
             placeholder="Ej: Caminar 10,000 pasos"
             className="w-full px-5 py-4 bg-[#1e293b] border-2 border-transparent focus:border-[#39ff14] rounded-2xl outline-none text-[#ededed] text-lg font-medium transition-colors placeholder:text-gray-600 placeholder:font-normal shadow-inner"
           />
+        </div>
+
+        <div>
+          <label htmlFor="ciclo" className="block text-sm font-medium text-gray-400 mb-2 ml-1">¿Pertenece a un Reto o Plan?</label>
+          <select
+            id="ciclo"
+            value={cicloId}
+            onChange={(e) => setCicloId(e.target.value)}
+            className="w-full px-5 py-4 bg-[#1e293b] border-2 border-[#334155] focus:border-[#39ff14] rounded-2xl outline-none text-[#ededed] text-base font-medium transition-colors cursor-pointer appearance-none shadow-inner"
+          >
+            <option value="">Permanente (Ningún plan)</option>
+            {ciclosDisponibles.map(c => (
+              <option key={c.id} value={c.id}>{c.nombre}</option>
+            ))}
+          </select>
         </div>
 
         <button

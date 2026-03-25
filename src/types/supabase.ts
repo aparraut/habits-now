@@ -26,6 +26,32 @@ export interface Database {
           updated_at?: string | null
         }
       }
+      ciclos: {
+        Row: {
+          id: string
+          usuario_id: string
+          nombre: string
+          fecha_inicio: string
+          fecha_fin: string
+          creado_en: string | null
+        }
+        Insert: {
+          id?: string
+          usuario_id: string
+          nombre: string
+          fecha_inicio: string
+          fecha_fin: string
+          creado_en?: string | null
+        }
+        Update: {
+          id?: string
+          usuario_id?: string
+          nombre?: string
+          fecha_inicio?: string
+          fecha_fin?: string
+          creado_en?: string | null
+        }
+      }
       habitos: {
         Row: {
           id: string
@@ -33,6 +59,8 @@ export interface Database {
           nombre: string
           icono: string | null
           frecuencia: Json | null
+          ciclo_id: string | null
+          activo: boolean | null
           creado_en: string | null
         }
         Insert: {
@@ -41,6 +69,8 @@ export interface Database {
           nombre: string
           icono?: string | null
           frecuencia?: Json | null
+          ciclo_id?: string | null
+          activo?: boolean | null
           creado_en?: string | null
         }
         Update: {
@@ -49,6 +79,8 @@ export interface Database {
           nombre?: string
           icono?: string | null
           frecuencia?: Json | null
+          ciclo_id?: string | null
+          activo?: boolean | null
           creado_en?: string | null
         }
       }

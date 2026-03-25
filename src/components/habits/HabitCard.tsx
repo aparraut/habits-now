@@ -1,6 +1,6 @@
 'use client';
 import { useState, useOptimistic, startTransition } from 'react';
-import { Pencil, MoreVertical, Trash2, Edit2 } from 'lucide-react';
+import { Pencil, MoreVertical, Edit2, Archive } from 'lucide-react';
 import JournalModal from '@/components/habits/JournalModal';
 import { db } from '@/lib/db/local';
 import { processSyncQueue } from '@/lib/db/sync';
@@ -15,9 +15,18 @@ interface HabitCardProps {
   icon: string | null;
   initialScore: number | null;
   logId: string | null;
+  selectedDate?: string;
 }
 
-export default function HabitCard({ id, userId, name, icon, initialScore, logId }: HabitCardProps) {
+export default function HabitCard({ 
+  id, 
+  userId, 
+  name, 
+  icon, 
+  initialScore, 
+  logId,
+  selectedDate = new Date().toISOString().split('T')[0]
+}: HabitCardProps) {
   const [optimisticScore, setOptimisticScore] = useOptimistic<number | null, number>(
     initialScore,
     (state, newScore) => newScore
@@ -26,12 +35,13 @@ export default function HabitCard({ id, userId, name, icon, initialScore, logId 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const router = useRouter();
 
-  const handleDelete = async () => {
-    setIsMenuOpen(false);
-    if (confirm('¿Estás seguro de eliminar este hábito y todo su progreso? Esta acción no se puede deshacer.')) {
+  const handleArchive = async () => {
+    if (confirm(`¿Quieres archivar "${name}"? No aparecerá en tu lista diaria, pero podrás reactivarlo desde el Baúl.`)) {
       const supabase = createClient();
-      await supabase.from('habitos').delete().eq('id', id);
+      // Resolvemos el error de tipo 'never' forzando el tipo del payload de update
+      await supabase.from('habitos').update({ activo: false } as never).eq('id', id);
       router.refresh();
+      setIsMenuOpen(false);
     }
   };
 
@@ -40,7 +50,8 @@ export default function HabitCard({ id, userId, name, icon, initialScore, logId 
       setOptimisticScore(val);
     });
 
-    const today = new Date().toISOString().split('T')[0];
+    const todayForLocal = new Date().toISOString().split('T')[0];
+    const targetDate = selectedDate;
     
     // In local Dexie, we need to handle insert vs update
     const recordId = logId || crypto.randomUUID(); // Fallback random ID if it's a new log
@@ -48,7 +59,7 @@ export default function HabitCard({ id, userId, name, icon, initialScore, logId 
       id: recordId,
       habito_id: id,
       usuario_id: userId,
-      fecha: today,
+      fecha: targetDate, // Usar la fecha seleccionada del scroller!
       puntuacion: val,
       nota_diario: null // keeping journal separate for now
     };
@@ -103,11 +114,11 @@ export default function HabitCard({ id, userId, name, icon, initialScore, logId 
               Editar hábito
             </Link>
             <button 
-              onClick={handleDelete}
-              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-500 hover:bg-[#1e293b] hover:text-red-400 transition-colors text-left"
+              onClick={handleArchive}
+              className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 transition-colors text-left"
             >
-              <Trash2 className="w-4 h-4" />
-              Eliminar
+              <Archive className="w-4 h-4" />
+              Archivar hábito
             </button>
           </div>
         )}
