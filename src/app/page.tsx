@@ -19,7 +19,7 @@ export default async function Home({ searchParams }: PageProps) {
   return (
     <main className="p-4 max-w-md mx-auto min-h-screen relative pb-24">
       <header className="mb-6 mt-4">
-        <h1 className="text-3xl font-bold tracking-tight text-[#ededed]">Habits Now</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Habits Now</h1>
         <p className="text-sm text-gray-400">Tu progreso diario</p>
       </header>
 
@@ -27,7 +27,7 @@ export default async function Home({ searchParams }: PageProps) {
 
       <Suspense key={selectedDate} fallback={
         <div className="flex flex-col items-center justify-center mt-20 space-y-4 animate-pulse">
-          <div className="w-12 h-12 rounded-full border-4 border-t-[#39ff14] border-gray-800 animate-spin"></div>
+          <div className="w-12 h-12 rounded-full border-4 border-t-neon-green border-gray-800 animate-spin"></div>
           <p className="text-gray-500 text-sm font-medium italic">Viajando en el tiempo...</p>
         </div>
       }>
@@ -76,13 +76,13 @@ async function HabitsList({ selectedDate }: { selectedDate: string }) {
   if (activeHabits.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center mt-24 space-y-6">
-        <div className="w-20 h-20 bg-[#1e293b] rounded-full flex items-center justify-center mb-2">
-          <Plus className="w-10 h-10 text-[#39ff14] opacity-50" />
+        <div className="w-20 h-20 bg-charcoal rounded-full flex items-center justify-center mb-2">
+          <Plus className="w-10 h-10 text-neon-green opacity-50" />
         </div>
         <p className="text-gray-400 text-center font-medium">No tienes hábitos aún.</p>
         <Link 
           href="/habitos/nuevo"
-          className="px-6 py-3 bg-[#1e293b] border-2 border-[#334155] rounded-xl text-[#39ff14] font-bold hover:border-[#39ff14] hover:bg-opacity-80 transition-all flex items-center gap-2 shadow-lg"
+          className="px-6 py-3 bg-charcoal border-2 border-background rounded-xl text-neon-green font-bold hover:border-neon-green hover:bg-opacity-80 transition-all flex items-center gap-2 shadow-lg"
         >
           <Plus className="w-5 h-5" />
           Crear mi primer hábito
@@ -115,7 +115,7 @@ async function HabitsList({ selectedDate }: { selectedDate: string }) {
         <div className="w-full max-w-md relative h-full">
           <Link 
             href="/habitos/nuevo" 
-            className="absolute bottom-24 right-6 w-14 h-14 bg-[#39ff14] text-[#0f172a] rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:-translate-y-1 transition-transform pointer-events-auto"
+            className="absolute bottom-24 right-6 w-14 h-14 bg-neon-green text-background rounded-full flex items-center justify-center shadow-[0_0_15px_rgba(57,255,20,0.4)] hover:-translate-y-1 transition-transform pointer-events-auto"
           >
             <Plus className="w-8 h-8" />
           </Link>
