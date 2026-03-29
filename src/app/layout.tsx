@@ -47,7 +47,7 @@ export default function RootLayout({
   return (
     <Suspense fallback={
       <html lang="es" className={`${geistSans.variable} ${geistMono.variable} dark`}>
-        <body className="antialiased pb-16 bg-[#0f172a] text-[#ededed]">
+        <body className="antialiased pb-16 bg-background text-foreground">
         </body>
       </html>
     }>
@@ -63,7 +63,7 @@ async function DynamicLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} dark`}>
-      <body className="antialiased pb-16 bg-[#0f172a] text-[#ededed]">
+      <body className="antialiased pb-16 bg-background text-foreground">
         <I18nProvider locale={locale} dictionary={dictionary}>
           {children}
           <BottomBar />

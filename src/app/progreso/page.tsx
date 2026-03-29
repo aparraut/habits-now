@@ -19,7 +19,7 @@ export default async function ProgresoPage({ searchParams }: PageProps) {
   return (
     <main className="p-4 max-w-md mx-auto min-h-screen pb-24">
       <header className="mb-6 mt-4">
-        <h1 className="text-3xl font-bold tracking-tight text-[#ededed]">Progreso</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Progreso</h1>
         <p className="text-sm text-gray-400 mt-1">Explora tus resultados e insights</p>
       </header>
 
@@ -37,15 +37,15 @@ function StatsSkeleton() {
     <div className="space-y-6 animate-pulse mt-4">
       {/* Cards de resumen */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="h-28 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
-        <div className="h-28 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
+        <div className="h-28 bg-charcoal rounded-2xl border border-background"></div>
+        <div className="h-28 bg-charcoal rounded-2xl border border-background"></div>
       </div>
       {/* Heatmap */}
-      <div className="h-48 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
+      <div className="h-48 bg-charcoal rounded-2xl border border-background"></div>
       {/* Star Habit */}
-      <div className="h-32 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
+      <div className="h-32 bg-charcoal rounded-2xl border border-background"></div>
       {/* Pattern Chart */}
-      <div className="h-56 bg-[#1e293b] rounded-2xl border border-[#334155]"></div>
+      <div className="h-56 bg-charcoal rounded-2xl border border-background"></div>
     </div>
   );
 }
@@ -86,7 +86,7 @@ async function StatsDashboard({ range }: { range: string }) {
     return (
       <div className="text-center mt-24">
         <p className="text-gray-400">No hay información de progreso disponible.</p>
-        <Link href="/habitos/nuevo" className="text-[#39ff14] font-bold mt-4 inline-block hover:text-white transition-colors">
+        <Link href="/habitos/nuevo" className="text-neon-green font-bold mt-4 inline-block hover:text-white transition-colors">
           Crea tu primer hábito para empezar a medir
         </Link>
       </div>
@@ -179,35 +179,35 @@ async function StatsDashboard({ range }: { range: string }) {
       
       {/* Resumen Rápido (Top Cards) */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-[#1e293b] p-5 rounded-2xl border border-[#334155] shadow-lg flex flex-col justify-center hover:border-orange-500/50 transition-colors">
+        <div className="bg-charcoal p-5 rounded-2xl border border-background shadow-lg flex flex-col justify-center hover:border-orange-500/50 transition-colors">
           <div className="flex items-center gap-2 text-gray-400 mb-2">
             <Flame className="w-5 h-5 text-orange-500" />
             <span className="text-xs sm:text-sm font-medium">Racha Actual</span>
           </div>
-          <p className="text-3xl font-bold text-[#ededed]">
+          <p className="text-3xl font-bold text-foreground">
             {currentStreak} <span className="text-lg font-normal text-gray-500">días</span>
           </p>
         </div>
 
-        <div className="bg-[#1e293b] p-5 rounded-2xl border border-[#334155] shadow-lg flex flex-col justify-center hover:border-[#39ff14]/50 transition-colors">
+        <div className="bg-charcoal p-5 rounded-2xl border border-background shadow-lg flex flex-col justify-center hover:border-neon-green/50 transition-colors">
           <div className="flex items-center gap-2 text-gray-400 mb-2">
-            <TrendingUp className="w-5 h-5 text-[#39ff14]" />
+            <TrendingUp className="w-5 h-5 text-neon-green" />
             <span className="text-xs sm:text-sm font-medium">Cumplimiento</span>
           </div>
-          <p className="text-3xl font-bold text-[#ededed]">
+          <p className="text-3xl font-bold text-foreground">
             {Math.min(monthlyCompletionRate, 100)}<span className="text-lg font-normal text-gray-500">%</span>
           </p>
         </div>
       </div>
 
       {/* Heatmap del mes */}
-      <div className="bg-[#1e293b] p-5 rounded-2xl border border-[#334155] shadow-lg">
+      <div className="bg-charcoal p-5 rounded-2xl border border-background shadow-lg">
         <div className="flex items-center justify-between mb-5">
-          <div className="flex items-center gap-2 text-[#ededed]">
-            <Calendar className="w-5 h-5 text-[#00eeff]" />
+          <div className="flex items-center gap-2 text-foreground">
+            <Calendar className="w-5 h-5 text-electric-blue" />
             <h2 className="font-semibold">{range === 'semana' ? 'Últimos 7 días' : range === 'año' ? 'Último Año' : 'Últimos 30 días'}</h2>
           </div>
-          <span className="text-[10px] font-bold px-2 py-1 bg-[#0f172a] rounded-md text-gray-400 border border-[#334155] uppercase tracking-wider">
+          <span className="text-[10px] font-bold px-2 py-1 bg-background rounded-md text-gray-400 border border-background uppercase tracking-wider">
             {validLogs.length} logs
           </span>
         </div>
@@ -215,10 +215,10 @@ async function StatsDashboard({ range }: { range: string }) {
         <div className={`grid ${range === 'semana' ? 'grid-cols-7' : 'grid-cols-7'} gap-2 sm:gap-3`}>
           {(range === 'semana' ? last30Days.slice(-7) : last30Days).map((day) => {
             // Determine density color
-            let bgColor = 'bg-[#0f172a] border border-[#334155] text-gray-600'; // Vacuum state (0)
-            if (day.count > 0) bgColor = 'bg-[#39ff14] bg-opacity-20 border border-[#39ff14]/30 text-[#39ff14]/70'; // Low intensity
-            if (day.count >= 2) bgColor = 'bg-[#39ff14] bg-opacity-50 border border-[#39ff14]/60 text-[#1e293b] font-bold'; // Mid intensity
-            if (day.count >= 4) bgColor = 'bg-[#39ff14] border border-[#39ff14] text-[#0f172a] font-bold shadow-[0_0_10px_rgba(57,255,20,0.4)]'; // High intensity
+            let bgColor = 'bg-background border border-background text-gray-600'; // Vacuum state (0)
+            if (day.count > 0) bgColor = 'bg-neon-green/20 border border-neon-green/30 text-neon-green/70'; // Low intensity
+            if (day.count >= 2) bgColor = 'bg-neon-green/50 border border-neon-green/60 text-charcoal font-bold'; // Mid intensity
+            if (day.count >= 4) bgColor = 'bg-neon-green border border-neon-green text-background font-bold shadow-[0_0_10px_rgba(57,255,20,0.4)]'; // High intensity
 
             return (
               <div 
@@ -233,16 +233,16 @@ async function StatsDashboard({ range }: { range: string }) {
         </div>
         <div className="mt-4 flex items-center justify-end gap-2 text-xs text-gray-500">
           <span>Menos</span>
-          <div className="w-3 h-3 rounded-sm bg-[#0f172a] border border-[#334155]"></div>
-          <div className="w-3 h-3 rounded-sm bg-[#39ff14] bg-opacity-20 border border-[#39ff14]/30"></div>
-          <div className="w-3 h-3 rounded-sm bg-[#39ff14] bg-opacity-50 border border-[#39ff14]/60"></div>
-          <div className="w-3 h-3 rounded-sm bg-[#39ff14] shadow-[0_0_5px_rgba(57,255,20,0.5)]"></div>
+          <div className="w-3 h-3 rounded-sm bg-background border border-background"></div>
+          <div className="w-3 h-3 rounded-sm bg-neon-green/20 border border-neon-green/30"></div>
+          <div className="w-3 h-3 rounded-sm bg-neon-green/50 border border-neon-green/60"></div>
+          <div className="w-3 h-3 rounded-sm bg-neon-green shadow-[0_0_5px_rgba(57,255,20,0.5)]"></div>
           <span>Más</span>
         </div>
       </div>
 
       {/* Hábito Estrella */}
-      <div className="bg-gradient-to-br from-[#1e293b] to-[#0f172a] p-5 rounded-2xl border border-[#334155] shadow-lg relative overflow-hidden">
+      <div className="bg-gradient-to-br from-charcoal to-background p-5 rounded-2xl border border-background shadow-lg relative overflow-hidden">
         <div className="absolute top-0 right-0 p-4 opacity-10">
           <Trophy className="w-24 h-24 text-yellow-400" />
         </div>
@@ -255,12 +255,12 @@ async function StatsDashboard({ range }: { range: string }) {
         {topHabit ? (
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-[#0f172a] flex items-center justify-center text-3xl shadow-inner border border-[#334155]/50 group-hover:scale-110 transition-transform">
+              <div className="w-16 h-16 rounded-2xl bg-background flex items-center justify-center text-3xl shadow-inner border border-background/50 group-hover:scale-110 transition-transform">
                 {topHabit.icono || '💎'}
               </div>
               <div>
-                <p className="font-black text-2xl text-[#ededed] leading-tight">{topHabit.nombre}</p>
-                <p className="text-sm font-bold text-[#00eeff] mt-1 flex items-center gap-1">
+                <p className="font-black text-2xl text-foreground leading-tight">{topHabit.nombre}</p>
+                <p className="text-sm font-bold text-electric-blue mt-1 flex items-center gap-1">
                   <Flame className="w-4 h-4" />
                   {maxCount} días logrados
                 </p>
@@ -268,20 +268,20 @@ async function StatsDashboard({ range }: { range: string }) {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-gray-400 italic relative z-10 px-2 py-4 text-center border border-dashed border-[#334155] rounded-xl">
+          <p className="text-sm text-gray-400 italic relative z-10 px-2 py-4 text-center border border-dashed border-background rounded-xl">
             Aún no hay suficientes datos para encontrar a tu estrella. ¡Sigue rompiéndola!
           </p>
         )}
       </div>
 
       {/* Patrón Semanal (Most Effective Day) */}
-      <div className="bg-[#1e293b] p-6 rounded-2xl border border-[#334155] shadow-lg">
+      <div className="bg-charcoal p-6 rounded-2xl border border-background shadow-lg">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-2 text-gray-400">
-            <BarChart3 className="w-5 h-5 text-[#39ff14]" />
+            <BarChart3 className="w-5 h-5 text-neon-green" />
             <h2 className="text-sm font-bold uppercase tracking-wider">Día Más Efectivo</h2>
           </div>
-          <span className="text-[#39ff14] font-black text-lg underline decoration-2 underline-offset-4">
+          <span className="text-neon-green font-black text-lg underline decoration-2 underline-offset-4">
             {weekNames[bestDayIndex]}
           </span>
         </div>
@@ -299,12 +299,12 @@ async function StatsDashboard({ range }: { range: string }) {
                     style={{ height: `${Math.max(height, 5)}%` }}
                     className={`w-full max-w-[24px] mx-auto rounded-t-md transition-all duration-700 delay-${i * 100} ${
                       isBest 
-                        ? 'bg-[#39ff14] shadow-[0_0_20px_rgba(57,255,20,0.3)]' 
-                        : 'bg-[#334155] opacity-40'
+                        ? 'bg-neon-green shadow-[0_0_20px_rgba(57,255,20,0.3)]' 
+                        : 'bg-background opacity-40'
                     }`}
                   ></div>
                 </div>
-                <span className={`text-[10px] font-black tracking-tighter uppercase ${isBest ? 'text-[#39ff14]' : 'text-gray-500'}`}>
+                <span className={`text-[10px] font-black tracking-tighter uppercase ${isBest ? 'text-neon-green' : 'text-gray-500'}`}>
                   {name}
                 </span>
               </div>

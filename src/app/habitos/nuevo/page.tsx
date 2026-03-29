@@ -55,10 +55,10 @@ export default function NuevoHabito() {
   return (
     <main className="p-4 max-w-md mx-auto min-h-screen">
       <header className="mb-8 mt-4 flex items-center gap-4">
-        <Link href="/" className="text-gray-400 hover:text-[#ededed] p-2 -ml-2 rounded-full hover:bg-[#1e293b] transition-colors">
+        <Link href="/" className="text-gray-400 hover:text-foreground p-2 -ml-2 rounded-full hover:bg-charcoal transition-colors">
           <ArrowLeft className="w-6 h-6" />
         </Link>
-        <h1 className="text-2xl font-bold tracking-tight text-[#ededed]">Nuevo Hábito</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">Nuevo Hábito</h1>
       </header>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -70,7 +70,7 @@ export default function NuevoHabito() {
                 key={ico}
                 type="button"
                 onClick={() => setIcono(ico)}
-                className={`w-14 h-14 text-2xl flex items-center justify-center rounded-2xl transition-all duration-300 ${icono === ico ? 'bg-[#39ff14] shadow-[0_0_15px_rgba(57,255,20,0.3)] scale-110' : 'bg-[#1e293b] opacity-70 hover:opacity-100 hover:bg-[#334155]'}`}
+                className={`w-14 h-14 text-2xl flex items-center justify-center rounded-2xl transition-all duration-300 ${icono === ico ? 'bg-neon-green shadow-[0_0_15px_rgba(57,255,20,0.3)] scale-110' : 'bg-charcoal opacity-70 hover:opacity-100 hover:bg-[#334155]'}`}
               >
                 {ico}
               </button>
@@ -88,7 +88,7 @@ export default function NuevoHabito() {
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
             placeholder="Ej: Caminar 10,000 pasos"
-            className="w-full px-5 py-4 bg-[#1e293b] border-2 border-transparent focus:border-[#39ff14] rounded-2xl outline-none text-[#ededed] text-lg font-medium transition-colors placeholder:text-gray-600 placeholder:font-normal shadow-inner"
+            className="w-full px-5 py-4 bg-charcoal border-2 border-transparent focus:border-neon-green rounded-2xl outline-none text-foreground text-lg font-medium transition-colors placeholder:text-gray-600 placeholder:font-normal shadow-inner"
           />
         </div>
 
@@ -98,7 +98,7 @@ export default function NuevoHabito() {
             id="ciclo"
             value={cicloId}
             onChange={(e) => setCicloId(e.target.value)}
-            className="w-full px-5 py-4 bg-[#1e293b] border-2 border-[#334155] focus:border-[#39ff14] rounded-2xl outline-none text-[#ededed] text-base font-medium transition-colors cursor-pointer appearance-none shadow-inner"
+            className="w-full px-5 py-4 bg-charcoal border-2 border-[#334155] focus:border-neon-green rounded-2xl outline-none text-foreground text-base font-medium transition-colors cursor-pointer appearance-none shadow-inner"
           >
             <option value="">Permanente (Ningún plan)</option>
             {ciclosDisponibles.map(c => (
@@ -110,7 +110,7 @@ export default function NuevoHabito() {
         <button
           type="submit"
           disabled={loading || !nombre.trim()}
-          className="w-full flex items-center justify-center gap-3 py-4 text-lg font-bold text-[#0f172a] bg-[#39ff14] rounded-2xl hover:bg-opacity-90 transition-all shadow-[0_4px_20px_rgba(57,255,20,0.4)] disabled:opacity-50 disabled:shadow-none hover:-translate-y-1 mt-10 active:scale-95"
+          className="w-full flex items-center justify-center gap-3 py-4 text-lg font-bold text-background bg-neon-green rounded-2xl hover:bg-opacity-90 transition-all shadow-[0_4px_20px_rgba(57,255,20,0.4)] disabled:opacity-50 disabled:shadow-none hover:-translate-y-1 mt-10 active:scale-95"
         >
           {loading ? <Loader2 className="w-6 h-6 animate-spin" /> : null}
           {loading ? 'Creando...' : 'Guardar hábito'}

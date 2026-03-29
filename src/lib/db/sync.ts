@@ -13,11 +13,11 @@ export async function processSyncQueue() {
     try {
       const table = supabase.from(op.table as "habitos");
       if (op.action === 'insert') {
-        // @ts-expect-error
+        // @ts-expect-error: op.data is generic but expected to match the table structure
         const { error } = await table.insert(op.data);
         if (error) console.error('Sync insert error:', error);
       } else if (op.action === 'update') {
-        // @ts-expect-error
+        // @ts-expect-error: op.data is generic but expected to match the table structure
         const { error } = await table.update(op.data).eq('id', op.recordId);
         if (error) console.error('Sync update error:', error);
       } else if (op.action === 'delete') {

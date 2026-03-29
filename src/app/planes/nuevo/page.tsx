@@ -36,7 +36,7 @@ export default function NuevoPlanPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Debes iniciar sesión');
 
-      const { error: insertError } = await supabase.from('ciclos').insert({
+      const { error: insertError } = await (supabase.from('ciclos') as any).insert({
         usuario_id: user.id,
         nombre: nombre.trim(),
         fecha_inicio: fechaInicio,
