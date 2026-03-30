@@ -4,8 +4,11 @@
   --color-foreground: #ededed;
   --color-background: #0f172a;
   --color-charcoal: #1e293b;
-  --color-neon-green: #39ff14;
-  --color-electric-blue: #00eeff;
+  --color-neon-green: #39ff14;         /* 5: Exceptional Success */
+  --color-electric-blue: #00eeff;      /* 4: Strong Success */
+  --color-standard: #4cc9f0;           /* 3: Neutral/Done */
+  --color-mediocre: #4361ee;           /* 2: Low Effort */
+  --color-failure: #3a0ca3;            /* 1: Broken/Starting */
   --color-card: var(--color-charcoal);
   --color-card-foreground: #ffffff;
 }

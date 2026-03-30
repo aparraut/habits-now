@@ -1,6 +1,6 @@
 'use client';
 import { useState, useOptimistic, startTransition } from 'react';
-import { Pencil, MoreVertical, Edit2, Archive } from 'lucide-react';
+import { Star, Pencil, MoreVertical, Edit2, Archive } from 'lucide-react';
 import JournalModal from '@/components/habits/JournalModal';
 import { db } from '@/lib/db/local';
 import { processSyncQueue } from '@/lib/db/sync';
@@ -29,7 +29,7 @@ export default function HabitCard({
 }: HabitCardProps) {
   const [optimisticScore, setOptimisticScore] = useOptimistic<number | null, number>(
     initialScore,
-    (state, newScore) => newScore
+    (state: number | null, newScore: number) => newScore
   );
   const [isJournalOpen, setJournalOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -78,14 +78,28 @@ export default function HabitCard({
     });
   };
 
+  const getStarColor = (starIndex: number, currentScore: number) => {
+    // Escala de intensidad manteniendo definición (stroke 100%)
+    const intensityMap: Record<number, { fillOpacity: string, shadow: string }> = {
+      1: { fillOpacity: 'fill-opacity-[0.18]', shadow: 'drop-shadow-[0_0_2px_rgba(57,255,20,0.5)]' },
+      2: { fillOpacity: 'fill-opacity-[0.35]', shadow: 'drop-shadow-[0_0_5px_rgba(57,255,20,0.5)]' },
+      3: { fillOpacity: 'fill-opacity-[0.60]', shadow: 'drop-shadow-[0_0_10px_rgba(57,255,20,0.5)]' },
+      4: { fillOpacity: 'fill-opacity-[0.80]', shadow: 'drop-shadow-[0_0_15px_rgba(57,255,20,0.5)]' },
+      5: { fillOpacity: 'fill-opacity-100', shadow: 'drop-shadow-[0_0_20px_rgba(57,255,20,0.6)]' }
+    };
+
+    const style = intensityMap[starIndex] || intensityMap[1];
+    return `text-neon-green fill-neon-green ${style.fillOpacity} ${style.shadow}`;
+  };
+
   return (
     <div className="bg-charcoal p-4 rounded-2xl flex flex-col gap-3 shadow-md border border-background">
       <div className="flex justify-between items-center relative">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-xl">
+          <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center text-xl text-foreground">
             {icon || '📝'}
           </div>
-          <span className="font-semibold text-lg">{name}</span>
+          <span className="font-semibold text-lg text-foreground">{name}</span>
         </div>
         
         <div className="flex items-center gap-1">
@@ -99,7 +113,7 @@ export default function HabitCard({
         </div>
 
         {isMenuOpen && (
-          <div className="absolute right-0 top-12 w-48 bg-[#0f172a] rounded-xl shadow-xl border border-[#334155] overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
+          <div className="absolute right-0 top-12 w-48 bg-background rounded-xl shadow-xl border border-background overflow-hidden z-50 animate-in fade-in zoom-in-95 duration-200">
             <Link 
               href={`/habitos/${id}/editar`}
               className="flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-charcoal hover:text-white transition-colors"
@@ -118,20 +132,25 @@ export default function HabitCard({
         )}
       </div>
       
-      <div className="flex justify-between mt-2">
-        {[1, 2, 3, 4, 5].map((val) => (
-          <button
-            key={val}
-            onClick={() => handleScore(val)}
-            className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg transition-all ${
-              optimisticScore === val 
-                ? 'bg-neon-green text-background shadow-[0_0_10px_rgba(57,255,20,0.5)] scale-105' 
-                : 'bg-background text-gray-400 hover:bg-gray-700 hover:scale-105'
-            }`}
-          >
-            {val}
-          </button>
-        ))}
+      <div className="flex justify-between px-2 mt-2">
+        {[1, 2, 3, 4, 5].map((val) => {
+          const isActive = (optimisticScore || 0) >= val;
+          return (
+            <button
+              key={val}
+              onClick={() => handleScore(val)}
+              className="transition-all duration-300 transform active:scale-125 focus:outline-none"
+            >
+              <Star 
+                className={`w-10 h-10 transition-all duration-300 ${
+                  isActive 
+                    ? getStarColor(val, optimisticScore!) 
+                    : 'text-gray-700 fill-transparent opacity-30 hover:opacity-100'
+                }`} 
+              />
+            </button>
+          );
+        })}
       </div>
 
       <JournalModal isOpen={isJournalOpen} onClose={() => setJournalOpen(false)} habitName={name} habitId={id} />
